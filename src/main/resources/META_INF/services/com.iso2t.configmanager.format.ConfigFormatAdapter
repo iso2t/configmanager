@@ -1,0 +1,6 @@
+com.iso2t.configmanager.format.formats.JsonFormatAdapter
+com.iso2t.configmanager.format.formats.Json5FormatAdapter 
+com.iso2t.configmanager.format.formats.TomlFormatAdapter
+com.iso2t.configmanager.format.formats.YamlFormatAdapter
+com.iso2t.configmanager.format.formats.XmlFormatAdapter
+com.iso2t.configmanager.format.formats.KdlFormatAdapter
