@@ -5,7 +5,9 @@ import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.iso2t.configmanager.annotations.AutoComment;
 import com.iso2t.configmanager.annotations.Comment;
+import com.iso2t.configmanager.annotations.CommentValueProvider;
 import com.iso2t.configmanager.annotations.Config;
 import com.iso2t.configmanager.value.AbstractValue;
 import com.iso2t.configmanager.value.ConfigValue;
@@ -214,7 +216,7 @@ public class ConfigManager<T> {
             f.setAccessible(true);
             String key = f.getName().toLowerCase();
 
-            writeComments(f, w, indent);
+            writeComments(f, obj, w, indent);
 
             if (f.getType().isAnnotationPresent(Config.class)) {
                 writeNestedConfig(obj, f, key, w, indent);
@@ -233,13 +235,32 @@ public class ConfigManager<T> {
         if (indent == 0) w.newLine();
     }
 
-    private void writeComments (Field f, BufferedWriter w, int indent) throws IOException {
+    private void writeComments (Field f, Object obj, BufferedWriter w, int indent) throws IOException {
         Comment comment = f.getAnnotation(Comment.class);
         if (comment != null) {
             for (String line : comment.value()) {
                 indent(w, indent + 1);
                 w.write("// " + line);
                 w.newLine();
+            }
+        }
+
+        AutoComment autoComment = f.getAnnotation(AutoComment.class);
+        if (autoComment != null) {
+            try {
+                @SuppressWarnings("unchecked")
+                CommentValueProvider<Object> provider =
+                        (CommentValueProvider<Object>) autoComment.value().getDeclaredConstructor().newInstance();
+                Object fieldValue = f.get(obj);
+                Object currentValue = fieldValue instanceof ConfigValue<?> cv ? cv.get() : fieldValue;
+                for (String line : provider.getCommentLines(f, currentValue)) {
+                    indent(w, indent + 1);
+                    w.write("// " + line);
+                    w.newLine();
+                }
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalStateException(
+                        "Failed to invoke AutoComment provider " + autoComment.value().getName(), e);
             }
         }
     }
