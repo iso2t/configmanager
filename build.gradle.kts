@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.iso2t"
-version = "1.1.0"
+version = "1.1.1"
 
 repositories {
     mavenCentral()
@@ -41,7 +41,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "com.iso2t"
             artifactId = "ConfigManager"
-            version = "1.1.0"
+            version = "1.1.1"
             from(components["java"])
         }
     }
