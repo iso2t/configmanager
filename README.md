@@ -13,7 +13,7 @@ Under the hood, it uses Jackson for parsing and serializing, supporting JSON5-st
 
 ## Table of Contents
 
-- [Features](#features)
+- [Features](##features)
 - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
@@ -57,7 +57,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.iso2t.configmanager:configmanager:1.0.0")
+    implementation("com.iso2t:ConfigManager:1.0.0")
 }
 ```
 
@@ -70,8 +70,8 @@ dependencies {
 </repository>
 
 <dependency>
-  <groupId>com.iso2t.configmanager</groupId>
-  <artifactId>configmanager</artifactId>
+  <groupId>com.iso2t</groupId>
+  <artifactId>ConfigManager</artifactId>
   <version>1.0.0</version>
 </dependency>
 ```
