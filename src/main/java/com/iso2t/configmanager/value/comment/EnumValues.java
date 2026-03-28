@@ -1,4 +1,6 @@
-package com.iso2t.configmanager.annotations;
+package com.iso2t.configmanager.value.comment;
+
+import com.iso2t.configmanager.annotations.CommentValueProvider;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -15,7 +17,7 @@ import java.util.stream.Collectors;
  *
  * <p>Usage:
  * <pre>{@code
- * @AutoComment(EnumValues.class)
+ * @CommentValues
  * private Mode mode = Mode.BALANCED;
  * }</pre>
  */
@@ -32,7 +34,7 @@ public final class EnumValues implements CommentValueProvider<Enum<?>> {
         Object[] constants = type.getEnumConstants();
         if (constants == null) {
             throw new IllegalArgumentException(
-                    "@AutoComment(EnumValues.class) requires an enum field, but field '"
+                    "@CommentValues(EnumValues.class) requires an enum field, but field '"
                             + field.getName() + "' has type " + type.getName());
         }
 

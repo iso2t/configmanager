@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.iso2t"
-version = "1.0.0"
+version = "1.1.0"
 
 repositories {
     mavenCentral()
@@ -15,8 +15,10 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    implementation("com.fasterxml.jackson.core:jackson-core:2.18.2")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
+    implementation("com.google.code.gson:gson:2.13.2")
+
+    implementation("com.fasterxml.jackson.core:jackson-core:2.21.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.1")
 }
 
 tasks.test {
@@ -37,9 +39,9 @@ publishing {
 
     publications {
         create<MavenPublication>("maven") {
-            groupId = "com.iso2t.configmanager"
-            artifactId = "configmanager"
-            version = "1.0.0"
+            groupId = "com.iso2t"
+            artifactId = "ConfigManager"
+            version = "1.1.0"
             from(components["java"])
         }
     }

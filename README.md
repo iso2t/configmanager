@@ -1,7 +1,7 @@
 # ConfigManager
 
 ![GitHub License](https://img.shields.io/github/license/iso2t/configmanager?style=for-the-badge)
-![Maven metadata](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fmaven.iso2t.com%2Freleases%2Fcom%2Fiso2t%2Fconfigmanager%2Fconfigmanager%2Fmaven-metadata.xml&style=for-the-badge)
+![Maven metadata](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fmaven.iso2t.com%2Freleases%2Fcom%2Fiso2t%2FConfigManager%2Fmaven-metadata.xml&style=for-the-badge)
 
 > A **simple**, **class-based** configuration manager for Java — focused on JSON and JSON5.
 

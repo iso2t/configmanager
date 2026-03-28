@@ -5,12 +5,14 @@ import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.iso2t.configmanager.annotations.AutoComment;
-import com.iso2t.configmanager.annotations.Comment;
-import com.iso2t.configmanager.annotations.CommentValueProvider;
-import com.iso2t.configmanager.annotations.Config;
+import com.iso2t.configmanager.annotations.*;
 import com.iso2t.configmanager.value.AbstractValue;
 import com.iso2t.configmanager.value.ConfigValue;
+import com.iso2t.configmanager.value.NumberRange;
+import com.iso2t.configmanager.value.comment.AutoCommentValueProvider;
+import com.iso2t.configmanager.value.comment.EnumValues;
+import com.iso2t.configmanager.value.comment.NumberValues;
+import com.iso2t.configmanager.value.wrappers.EnumValue;
 import com.iso2t.configmanager.value.wrappers.ListValue;
 
 import java.io.BufferedWriter;
@@ -192,7 +194,8 @@ public class ConfigManager<T> {
             }
         }
 
-        return switch (f.getType().getSimpleName()) {
+        String typeName = f.getType().getSimpleName();
+        return switch (typeName) {
             case "BooleanValue" -> Boolean.class;
             case "IntegerValue" -> Integer.class;
             case "StringValue" -> String.class;
@@ -201,7 +204,8 @@ public class ConfigManager<T> {
             case "FloatValue" -> Float.class;
             case "ShortValue" -> Short.class;
             case "ByteValue" -> Byte.class;
-            default -> throw new IllegalStateException("Unknown ConfigValue type " + f.getType().getSimpleName());
+            case "ObjectValue" -> Object.class;
+            default -> throw new IllegalStateException("Unknown ConfigValue type " + typeName);
         };
     }
 
@@ -245,22 +249,41 @@ public class ConfigManager<T> {
             }
         }
 
-        AutoComment autoComment = f.getAnnotation(AutoComment.class);
-        if (autoComment != null) {
+        CommentValues commentValues = f.getAnnotation(CommentValues.class);
+        if (commentValues != null) {
             try {
+                Class<? extends CommentValueProvider<?>> providerClass = commentValues.value();
+                Object fieldValue = f.get(obj);
+
+                if (providerClass == AutoCommentValueProvider.class) {
+                    providerClass = detectProvider(f, fieldValue);
+                }
+
+                if (providerClass == null) return;
+
                 @SuppressWarnings("unchecked")
                 CommentValueProvider<Object> provider =
-                        (CommentValueProvider<Object>) autoComment.value().getDeclaredConstructor().newInstance();
-                Object fieldValue = f.get(obj);
+                        (CommentValueProvider<Object>) providerClass.getDeclaredConstructor().newInstance();
                 Object currentValue = fieldValue instanceof ConfigValue<?> cv ? cv.get() : fieldValue;
-                for (String line : provider.getCommentLines(f, currentValue)) {
+
+                Object toPass = currentValue;
+                if (fieldValue != null) {
+                    Class<?> expectedType = getProviderExpectedType(providerClass);
+                    // If the provider specifically expects the wrapper (e.g. NumberRange),
+                    // but the currentValue is just a primitive/object (e.g. Integer), pass the wrapper.
+                    if (expectedType.isInstance(fieldValue) && !expectedType.isInstance(currentValue)) {
+                        toPass = fieldValue;
+                    }
+                }
+
+                for (String line : provider.getCommentLines(f, toPass)) {
                     indent(w, indent + 1);
                     w.write("// " + line);
                     w.newLine();
                 }
             } catch (ReflectiveOperationException e) {
                 throw new IllegalStateException(
-                        "Failed to invoke AutoComment provider " + autoComment.value().getName(), e);
+                        "Failed to invoke AutoComment provider " + commentValues.value().getName(), e);
             }
         }
     }
@@ -333,5 +356,42 @@ public class ConfigManager<T> {
             if (t instanceof Class<?> c) return c;
         }
         throw new IllegalStateException("Cannot unwrap wrapper type " + wrapper);
+    }
+
+    private Class<? extends CommentValueProvider<?>> detectProvider (Field f, Object fieldValue) {
+        Class<?> fieldType = f.getType();
+
+        if (NumberRange.class.isAssignableFrom(fieldType)) return NumberValues.class;
+        if (fieldValue instanceof NumberRange) return NumberValues.class;
+
+        if (fieldType.isEnum()) return EnumValues.class;
+        if (EnumValue.class.isAssignableFrom(fieldType)) return EnumValues.class;
+        if (fieldValue instanceof Enum) return EnumValues.class;
+        if (fieldValue instanceof EnumValue) return EnumValues.class;
+
+        return null;
+    }
+
+    private Class<?> getProviderExpectedType (Class<?> cls) {
+        for (Type t : cls.getGenericInterfaces()) {
+            if (t instanceof ParameterizedType pt && pt.getRawType() == CommentValueProvider.class) {
+                return extractClass(pt.getActualTypeArguments()[0]);
+            }
+        }
+        Class<?> superCls = cls.getSuperclass();
+        if (superCls != null && superCls != Object.class) {
+            return getProviderExpectedType(superCls);
+        }
+        return Object.class;
+    }
+
+    private Class<?> extractClass (Type type) {
+        if (type instanceof Class<?> c) return c;
+        if (type instanceof ParameterizedType pt) return extractClass(pt.getRawType());
+        if (type instanceof java.lang.reflect.WildcardType wt) {
+            Type[] bounds = wt.getUpperBounds();
+            if (bounds.length > 0) return extractClass(bounds[0]);
+        }
+        return Object.class;
     }
 }
