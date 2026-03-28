@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -91,7 +92,7 @@ public class ConfigManager<T> {
             String key = f.getName().toLowerCase();
             JsonNode child = node.get(key);
 
-            if (f.getType().isAnnotationPresent(Config.class)) {
+            if (isNestedConfig(f.getType())) {
                 populateNestedConfig(obj, f, child);
                 continue;
             }
@@ -156,7 +157,7 @@ public class ConfigManager<T> {
     }
 
     private Object parseListElement (JsonNode elNode, Class<?> elemType) throws IOException, IllegalAccessException {
-        if (elemType.isAnnotationPresent(Config.class)) {
+        if (isNestedConfig(elemType)) {
             Object element = instantiate(elemType);
             populate(element, elNode);
             return element;
@@ -210,7 +211,6 @@ public class ConfigManager<T> {
     }
 
     private void writeObject (Object obj, BufferedWriter w, int indent) throws IOException, IllegalAccessException {
-        indent(w, indent);
         w.write("{");
         w.newLine();
 
@@ -222,7 +222,7 @@ public class ConfigManager<T> {
 
             writeComments(f, obj, w, indent);
 
-            if (f.getType().isAnnotationPresent(Config.class)) {
+            if (isNestedConfig(f.getType())) {
                 writeNestedConfig(obj, f, key, w, indent);
             } else if (ConfigValue.class.isAssignableFrom(f.getType())) {
                 writeConfigValue(obj, f, key, w, indent);
@@ -331,7 +331,7 @@ public class ConfigManager<T> {
                 Object element = it.next();
                 indent(w, indent + 2);
 
-                if (element != null && element.getClass().isAnnotationPresent(Config.class)) {
+                if (element != null && isNestedConfig(element.getClass())) {
                     writeObject(element, w, indent + 2);
                 } else {
                     w.write(mapper.writeValueAsString(element));
@@ -347,6 +347,21 @@ public class ConfigManager<T> {
 
     private void indent (BufferedWriter w, int levels) throws IOException {
         for (int i = 0; i < levels; i++) w.write("    ");
+    }
+
+    private boolean isNestedConfig (Class<?> cls) {
+        if (cls == null) return false;
+        if (cls.isAnnotationPresent(Config.class)) return true;
+        if (cls.isPrimitive() || cls.isEnum() || cls.isArray()) return false;
+        if (cls.getName().startsWith("java.") || cls.getName().startsWith("javax.")) return false;
+        if (ConfigValue.class.isAssignableFrom(cls)) return false;
+        if (Collection.class.isAssignableFrom(cls)) return false;
+        try {
+            cls.getDeclaredConstructor();
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
     }
 
     private Class<?> unwrapValueType (Class<?> wrapper) {
@@ -388,7 +403,7 @@ public class ConfigManager<T> {
     private Class<?> extractClass (Type type) {
         if (type instanceof Class<?> c) return c;
         if (type instanceof ParameterizedType pt) return extractClass(pt.getRawType());
-        if (type instanceof java.lang.reflect.WildcardType wt) {
+        if (type instanceof WildcardType wt) {
             Type[] bounds = wt.getUpperBounds();
             if (bounds.length > 0) return extractClass(bounds[0]);
         }
