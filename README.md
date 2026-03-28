@@ -1,7 +1,7 @@
 # ConfigManager
 
 ![GitHub License](https://img.shields.io/github/license/iso2t/configmanager?style=for-the-badge)
-![Maven metadata](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fmaven.iso2t.com%2Freleases%2Fcom%2Fiso2t%2Fconfigmanager%2Fconfigmanager%2Fmaven-metadata.xml&style=for-the-badge)
+![Maven metadata](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fmaven.iso2t.com%2Freleases%2Fcom%2Fiso2t%2FConfigManager%2Fmaven-metadata.xml&style=for-the-badge)
 
 > A **simple**, **class-based** configuration manager for Java — focused on JSON and JSON5.
 
@@ -13,7 +13,7 @@ Under the hood, it uses Jackson for parsing and serializing, supporting JSON5-st
 
 ## Table of Contents
 
-- [Features](#features)
+- [Features](##features)
 - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
@@ -57,7 +57,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.iso2t.configmanager:configmanager:1.0.0")
+    implementation("com.iso2t:ConfigManager:1.0.0")
 }
 ```
 
@@ -70,8 +70,8 @@ dependencies {
 </repository>
 
 <dependency>
-  <groupId>com.iso2t.configmanager</groupId>
-  <artifactId>configmanager</artifactId>
+  <groupId>com.iso2t</groupId>
+  <artifactId>ConfigManager</artifactId>
   <version>1.0.0</version>
 </dependency>
 ```
